@@ -137,6 +137,55 @@
     updateFb();
   }
 
+  // ── Contador animado nos números ──
+  const counters = document.querySelectorAll('.counter');
+  if ('IntersectionObserver' in window && counters.length) {
+    const formatNum = (n, hasDot) => {
+      if (hasDot) return n.toLocaleString('pt-BR');
+      return n;
+    };
+
+    const animateCounter = (el) => {
+      const target = parseInt(el.dataset.target);
+      const prefix = el.dataset.prefix || '';
+      const hasDot = el.dataset.format === 'dot';
+      const duration = 2000;
+      const steps = 60;
+      const increment = target / steps;
+      let current = 0;
+      let step = 0;
+
+      const timer = setInterval(() => {
+        step++;
+        // easing: começa rápido e desacelera no final
+        const progress = step / steps;
+        const eased = 1 - Math.pow(1 - progress, 3);
+        current = Math.round(eased * target);
+
+        el.textContent = prefix + formatNum(current, hasDot);
+
+        if (step >= steps) {
+          clearInterval(timer);
+          el.textContent = prefix + formatNum(target, hasDot);
+        }
+      }, duration / steps);
+    };
+
+    const counterIO = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            animateCounter(entry.target);
+            counterIO.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    counters.forEach((c) => counterIO.observe(c));
+  }
+
   // ── Nav active link on scroll ──
   const sections = document.querySelectorAll('section[id], footer[id]');
   const navLinks = document.querySelectorAll('.nav-links a');
